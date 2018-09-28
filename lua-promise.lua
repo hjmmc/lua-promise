@@ -8,7 +8,9 @@ Promise = {
     value = nil,
     reason = nil,
     onResolves = {},
-onRejects = {}}
+    onRejects = {}
+}
+
 Promise.__index = Promise
 
 function Promise.new(excutor)
@@ -56,43 +58,50 @@ function Promise:next(onResolve, onReject)
             return value
         end
     end
-    if(type(onReject) ~= 'function') then
-        onReject = function (reason)
-            error(reason)
-        end
-    end
+    -- if(type(onReject) ~= 'function') then
+    --     onReject = function (reason)
+    --         error(reason)  -- not beautiful : this will catch '/usr/local/share/lua/5.3/lua-promise.lua:61: ...'
+    --     end
+    -- end
     return Promise.new(function (resolve, reject)
         if (self.status == FULFILLED) then
-            local success, x = xpcall(onResolve, function(err)
-                reject(err)
-            end, self.value)
+            local success, x = pcall(onResolve, self.value)
             if(success) then
                 resolve(x)
+            else
+                reject(x)
             end
-        end
-        if (self.status == REJECTED)then
-            local success, x = xpcall(onReject, function(err)
-                reject(err)
-            end, self.reason)
-            if(success) then
-                resolve(x)
-            end
-        end
-        if (self.status == PENDING) then
-            table.insert(self.onResolves, function (value)
-                local success, x = xpcall(onResolve, function(err)
-                    reject(err)
-                end, self.value)
+        elseif (self.status == REJECTED) then
+            if(type(onReject) ~= 'function') then
+                reject(self.reason)
+            else
+                local success, x = pcall(onReject, self.reason)
                 if(success) then
                     resolve(x)
+                else
+                    reject(x)
+                end
+            end
+        elseif (self.status == PENDING) then
+            table.insert(self.onResolves, function (value)
+                local success, x = pcall(onResolve, self.value)
+                if(success) then
+                    resolve(x)
+                else
+                    reject(x)
                 end
             end)
-            table.insert(self.onRejects, function (value)
-                local success, x = xpcall(onReject, function(err)
-                    reject(err)
-                end, self.reason)
-                if(success) then
-                    resolve(x)
+            
+            table.insert(self.onRejects, function (reason)
+                if(type(onReject) ~= 'function') then
+                    reject(self.reason)
+                else
+                    local success, x = pcall(onReject, self.reason)
+                    if(success) then
+                        resolve(x)
+                    else
+                        reject(x)
+                    end
                 end
             end)
         end

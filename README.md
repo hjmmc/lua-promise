@@ -7,9 +7,85 @@ promise(A+) for lua. like ES6
 # install dependencies
 luarocks install lua-promise
 ```
+## Interface
+
+* **For the Promsie class, call with '.'**
+
+**Promise.new(executor)**
+
+> ```lua
+> promise = Promise.new(function(resolve, reject) .. end);
+> ```
+
+**Promise.all(array)**
+
+> ```
+> promise = Promise.all(array)  -- a table as array
+> ```
+
+**Promise.race(array)**
+
+> ```lua
+> promise = Promise.race(array) -- a table as array
+> ```
+
+**Promise.reject(reason)**
+
+> ```lua
+> promise = Promise.reject(reason); -- reason is anything
+> ```
+
+**Promise.resolve(value)**
+
+> ```lua
+> promise = Promise.resolve(value);
+> promise = Promise.resolve(promise);
+> ```
+
+* **For promise instance, call with ':'**
+
+**promise:next(onResolve, onRejecte)**
+
+> ```lua
+> promise2 = promise:next(functoin(value) ... end);
+> promise2 = promise:next(nil, functoin(reason) ... end);
+> ```
+
+**promise:catch(onRejecte)**
+
+> ```lua
+> promise2 = promise:catch(functoin(reason) ... end)
+> ```
 
 ## Usage
+example
+```lua
+Promise = require('lua-promise2')
 
+login = Promise.resolve({err = 0, data = {id = '1001', name = 'admin'}}):next(function (ret)
+    if(ret.err == 0) then
+        -- login success
+        return ret.data.id
+    else
+        error(ret)
+    end
+end)
+getMenuConfig = function(id)
+    return Promise.resolve({home = '/home/'..id..'.html'})
+end
+getNickName = function (id)
+    return Promise.resolve('nickName'..id)
+end
+
+login:next(getMenuConfig):next(function (menu)
+    print(menu.home)
+end)
+login:next(getNickName):next(function (nickName)
+    print(nickName)
+end)
+```
+
+test code
 ```lua
 Promise = require('lua-promise')
 
