@@ -45,10 +45,10 @@ function Promise.new(excutor)
         end
     end
     
-    xpcall(excutor, function (err)
-        reject(err)
-    end, resolve, reject)
-    
+    local ok,x = pcall(excutor, resolve, reject)
+    if(ok == false) then
+        reject(x)
+    end
     return self
 end
 
