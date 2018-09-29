@@ -14,7 +14,7 @@ Promise = {
 Promise.__index = Promise
 
 function Promise.new(excutor)
-    self = {}
+    local self = {}
     setmetatable(self, Promise)
     
     local _resolve = function (value)
