@@ -2,7 +2,8 @@ PENDING = "pending"
 FULFILLED = "fulfilled"
 REJECTED = "rejected"
 
-Promise = {
+local Promise = {}
+local promise = {
     _CLASS_NAME = 'Promise',
     status = PENDING,
     value = nil,
@@ -11,56 +12,15 @@ Promise = {
     onRejects = {}
 }
 
-Promise.__index = Promise
+promise.__index = promise
 
-function Promise.new(excutor)
-    self = {}
-    setmetatable(self, Promise)
-    
-    local _resolve = function (value)
-        if(self.status == PENDING) then
-            self.status = FULFILLED
-            self.value = value
-            for i = 1, #self.onResolves do
-                self.onResolves[i](value)
-            end
-        end
-    end
-    
-    local resolve = function (value)
-        if(type(value) == 'table' and value._CLASS_NAME == 'Promise') then
-            value:next(resolve, reject)
-        else
-            _resolve(value)
-        end
-    end
-    
-    local reject = function (reason)
-        if(self.status == PENDING) then
-            self.status = REJECTED
-            self.reason = reason
-            for i = 1, #self.onRejects do
-                self.onRejects[i](value)
-            end
-        end
-    end
-    
-    local ok,x = pcall(excutor, resolve, reject)
-    if(ok == false) then
-        reject(x)
-    end
-    return self
-end
-
-function Promise:next(onResolve, onReject)
+function promise:next(onResolve, onReject)
     if(type(onResolve) ~= 'function') then
-        onResolve = function (value)
-            return value
-        end
+        onResolve = function (value) return value end
     end
     -- if(type(onReject) ~= 'function') then
     --     onReject = function (reason)
-    --         error(reason)  -- not beautiful : this will catch '/usr/local/share/lua/5.3/lua-promise.lua:61: ...'
+    --         error(reason)  -- not beautiful : this will catch '/usr/local/share/lua/5.3/lua-promise.lua:23: ...'
     --     end
     -- end
     return Promise.new(function (resolve, reject)
@@ -108,8 +68,47 @@ function Promise:next(onResolve, onReject)
     end)
 end
 
-function Promise:catch(onReject)
+function promise:catch(onReject)
     return self:next(nil, onReject)
+end
+
+function promise_resolve(self, value)
+    if(type(value) == 'table' and value._CLASS_NAME == 'Promise') then
+        value:next(function (ret) promise_resolve(self, ret) end, function (err) promise_reject(self, err) end)
+    else
+        if(self.status == PENDING) then
+            self.status = FULFILLED
+            self.value = value
+            for i = 1, #self.onResolves do
+                self.onResolves[i](value)
+            end
+        end
+    end
+end
+
+function promise_reject(self, reason)
+    if(self.status == PENDING) then
+        self.status = REJECTED
+        self.reason = reason
+        for i = 1, #self.onRejects do
+            self.onRejects[i](reason)
+        end
+    end
+end
+
+function Promise.new(excutor)
+    local self = setmetatable({}, promise)
+    self._CLASS_NAME = 'Promise'
+    self.status = PENDING
+    self.value = nil
+    self.reason = nil
+    self.onResolves = {}
+    self.onRejects = {}
+    local ok, x = pcall(excutor, function(value) return promise_resolve(self, value) end, function (reason) return promise_reject(self, reason) end)
+    if(ok == false) then
+        promise_reject(self, x)
+    end
+    return self
 end
 
 function Promise.all(promises)
