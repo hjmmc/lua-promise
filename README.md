@@ -1,13 +1,25 @@
 # lua-promise
 promise(A+) for lua. like ES6
 
+run in esp8266
+![ui](./screenshots/nodemcu.png)
+
 ## Build Setup
 
 ``` bash
 # install dependencies
 luarocks install lua-promise
 ```
-## Interface
+
+* In nodemcu 
+
+>1.Download `lua-promise.lua`
+
+>2.Open in ESPlorer and `Save to ESP`
+
+>3.Restart `ESPXXXX`
+
+## Api
 
 * **For the Promsie class, call with '.'**
 
@@ -60,7 +72,7 @@ luarocks install lua-promise
 ## Usage
 example
 ```lua
-Promise = require('lua-promise2')
+Promise = require('lua-promise')
 
 login = Promise.resolve({err = 0, data = {id = '1001', name = 'admin'}}):next(function (ret)
     if(ret.err == 0) then
