@@ -84,7 +84,7 @@ function Promise:next(onResolve, onReject)
             end
         elseif (self.status == PENDING) then
             table.insert(self.onResolves, function (value)
-                local success, x = pcall(onResolve, self.value)
+                local success, x = pcall(onResolve, value)
                 if(success) then
                     resolve(x)
                 else
@@ -94,9 +94,9 @@ function Promise:next(onResolve, onReject)
             
             table.insert(self.onRejects, function (reason)
                 if(type(onReject) ~= 'function') then
-                    reject(self.reason)
+                    reject(reason)
                 else
-                    local success, x = pcall(onReject, self.reason)
+                    local success, x = pcall(onReject, reason)
                     if(success) then
                         resolve(x)
                     else

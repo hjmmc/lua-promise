@@ -11,7 +11,7 @@ run in esp8266
 luarocks install lua-promise
 ```
 
-* In nodemcu 
+* In NodeMcu 
 
 >1.Download `lua-promise.lua`
 
@@ -31,7 +31,7 @@ luarocks install lua-promise
 
 **Promise.all(array)**
 
-> ```
+> ```lua
 > promise = Promise.all(array)  -- a table as array
 > ```
 
